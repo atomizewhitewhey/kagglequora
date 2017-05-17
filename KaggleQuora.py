@@ -7,21 +7,27 @@ Created on Wed May 10 21:07:26 2017
 """
 
 import pandas as pd
-train = pd.read_csv('/Users/matthewyeozhiwei/Downloads/train2.csv')
+train = pd.read_csv('/Users/matthewyeozhiwei/repos/KaggleQuora/train.csv')
 questions1 = train['question1'].tolist()
 questions2 = train['question2'].tolist()
 
+
+
+
+
 import string
 sp = string.punctuation
-questions1 = list(map(lambda t: ''.join(["" if c.isdigit() else c for c in t]), questions1))
-questions1 = list(map(lambda t: ''.join(["" if c in sp else c for c in t]), questions1))
-questions1 = list(map(str.lower, questions1))
 
-'''
-questions2 = list(map(lambda t: ''.join(["" if c.isdigit() else c for c in t]), questions2))
-questions2 = list(map(lambda t: ''.join(["" if c in sp else c for c in t]), questions2))
-questions2 = list(map(str.lower, questions2)) 
-'''
+def normalize(questions):
+    questions = list(map(lambda t: ''.join(["" if c.isdigit() else c for c in str(t)]), questions))
+    questions = list(map(lambda t: ''.join(["" if c in sp else c for c in str(t)]), questions))
+    questions = list(map(str.lower, questions))
+    return questions
+
+questions1 = normalize(questions1)
+questions2 = normalize(questions2)
+
+
 
 def to_TF(questions):
     import pandas as pd
@@ -37,7 +43,7 @@ def to_TF(questions):
     count_frame.columns = ['Count']
     return(count_frame.sort_values('Count', ascending = False))
     
-wf = to_TF(questions1)
+## wf = to_TF(questions1)
 
 def wf_bar(wf):
     import matplotlib.pyplot as plt
@@ -50,7 +56,7 @@ def wf_bar(wf):
     ax.set_xlabel('Word')
     plt.show()
     return 'Done'
-##wf_bar(wf)
+
 
 def plot_cfd(wf):
     import matplotlib.pyplot as plt
@@ -69,29 +75,39 @@ def plot_cfd(wf):
     ax.set_xlabel('Word')
     plt.show()
     return 'Done'
+
+
+
+stop_words = pd.read_csv('/Users/matthewyeozhiwei/repos/KaggleQuora/stopwords.csv')
+stop_words = [w for w in stop_words.words if w in stop_words.words.unique() ]
+
+def rmstop(questions):
+    temp = [question.split() for question in questions]
+    questions = [' '.join([word for word in question if word not in set(stop_words)]) for question in temp]
+    return questions
+
+questions1 = rmstop(questions1)
+questions2 = rmstop(questions2)
+           
+## wf = to_TF(questions1)
+## wf_bar(wf)
+## plot_cfd(wf)
+
+from nltk.stem.porter import PorterStemmer
+porter_stemmer = PorterStemmer()
+def stem(questions):
+    temp = [question.split() for question in questions] 
+    temp = map(lambda t: [porter_stemmer.stem(w) for w in t], temp)
+    questions = [' '.join(question) for question in temp] 
+    return questions
+
+questions1 = stem(questions1)
+questions2 = stem(questions2)
+
+##wf = to_TF(questions1)
+##wf_bar(wf)
 ##plot_cfd(wf)
 
 
-stop_words = pd.read_csv('/Users/matthewyeozhiwei/Downloads/stopwords2.csv')
-stop_words = [w for w in stop_words.words if w in stop_words.words.unique() ]
-print(stop_words[:20])
-
-temp = [question.split() for question in questions1] ## Split tweets into tokens
-questions1 = [' '.join([word for word in question if word not in set(stop_words)]) for question in temp]
-'''            
-wf = to_TF(questions1)
-wf_bar(wf)
-plot_cfd(wf)
-'''
-from nltk.stem.porter import PorterStemmer
-porter_stemmer = PorterStemmer()
-temp = [question.split() for question in questions1] ## Split questions into tokens
-temp = map(lambda t: [porter_stemmer.stem(w) for w in t], temp)
-questions1 = [' '.join(question) for question in temp] ## Join the words of the question string
-'''
-wf = to_TF(questions1)
-wf_bar(wf)
-plot_cfd(wf)
-'''
-
 print(questions1[:10])
+print(questions2[:10])
